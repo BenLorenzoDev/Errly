@@ -8,7 +8,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../lib/api';
 import { useErrors } from '../hooks/useErrors';
 import { useErrorsContext } from '../App';
-import type { ServiceInfo, TimeRange, Severity } from '@shared/types';
+import type { ServiceInfo, TimeRange, Severity, ErrorStatus } from '@shared/types';
 
 const TIME_RANGES: { value: TimeRange; label: string }[] = [
   { value: 'last-hour', label: 'Last hour' },
@@ -22,6 +22,14 @@ const SEVERITIES: { value: Severity | ''; label: string }[] = [
   { value: 'fatal', label: 'Fatal' },
   { value: 'error', label: 'Error' },
   { value: 'warn', label: 'Warning' },
+];
+
+const STATUSES: { value: ErrorStatus | ''; label: string }[] = [
+  { value: '', label: 'All statuses' },
+  { value: 'new', label: 'New' },
+  { value: 'investigating', label: 'Investigating' },
+  { value: 'in-progress', label: 'In Progress' },
+  { value: 'resolved', label: 'Resolved' },
 ];
 
 export function FilterBar() {
@@ -68,6 +76,7 @@ export function FilterBar() {
   const activeFilterCount = [
     state.filters.service,
     state.filters.severity,
+    state.filters.status,
     state.filters.timeRange,
     state.filters.search,
   ].filter(Boolean).length;
@@ -109,6 +118,24 @@ export function FilterBar() {
           {SEVERITIES.map((sev) => (
             <option key={sev.value} value={sev.value}>
               {sev.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Status dropdown */}
+        <select
+          value={state.filters.status ?? ''}
+          onChange={(e) =>
+            setFilter(
+              'status',
+              (e.target.value as ErrorStatus) || undefined,
+            )
+          }
+          className="px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-md text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        >
+          {STATUSES.map((st) => (
+            <option key={st.value} value={st.value}>
+              {st.label}
             </option>
           ))}
         </select>
@@ -188,6 +215,13 @@ export function FilterBar() {
             <FilterBadge
               label={`Severity: ${state.filters.severity}`}
               onRemove={() => setFilter('severity', undefined)}
+            />
+          )}
+
+          {state.filters.status && (
+            <FilterBadge
+              label={`Status: ${STATUSES.find((s) => s.value === state.filters.status)?.label ?? state.filters.status}`}
+              onRemove={() => setFilter('status', undefined)}
             />
           )}
 

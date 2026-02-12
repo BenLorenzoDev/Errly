@@ -21,7 +21,7 @@ import { Layout } from './components/Layout';
 import { ErrorFeed } from './components/ErrorFeed';
 import { ErrorDetail } from './components/ErrorDetail';
 import { SettingsPage } from './components/SettingsPage';
-import type { ErrlyErrorSummary, ErrorFilters } from '@shared/types';
+import type { ErrlyErrorSummary, ErrorFilters, ErrorStatus } from '@shared/types';
 
 // ---- State & Reducer ----
 
@@ -188,6 +188,8 @@ function parseHash(hash: string): { route: Route; filters: ErrorFilters } {
     if (params.get('service')) filters.service = params.get('service')!;
     if (params.get('severity'))
       filters.severity = params.get('severity') as ErrorFilters['severity'];
+    if (params.get('status'))
+      filters.status = params.get('status') as ErrorStatus;
     if (params.get('timeRange'))
       filters.timeRange = params.get('timeRange') as ErrorFilters['timeRange'];
     if (params.get('search')) filters.search = params.get('search')!;
@@ -215,6 +217,7 @@ function filtersToHash(filters: ErrorFilters): string {
   const params = new URLSearchParams();
   if (filters.service) params.set('service', filters.service);
   if (filters.severity) params.set('severity', filters.severity);
+  if (filters.status) params.set('status', filters.status);
   if (filters.timeRange) params.set('timeRange', filters.timeRange);
   if (filters.search) params.set('search', filters.search);
   if (filters.page && filters.page > 1) params.set('page', String(filters.page));

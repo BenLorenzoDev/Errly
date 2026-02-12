@@ -7,6 +7,10 @@
 
 export type Severity = 'error' | 'warn' | 'fatal';
 
+// --- Error Status ---
+
+export type ErrorStatus = 'new' | 'investigating' | 'in-progress' | 'resolved';
+
 // --- Error Source ---
 
 export type ErrorSource = 'auto-capture' | 'direct';
@@ -20,6 +24,7 @@ export interface ErrlyError {
   message: string;
   stackTrace: string | null;
   severity: Severity;
+  status: ErrorStatus;
   endpoint: string | null;
   rawLog: string;
   source: ErrorSource;
@@ -28,6 +33,7 @@ export interface ErrlyError {
   firstSeenAt: number;
   lastSeenAt: number;
   occurrenceCount: number;
+  statusChangedAt: number;
   createdAt: number;
 }
 
@@ -38,6 +44,7 @@ export interface ErrlyErrorSummary {
   serviceName: string;
   message: string;
   severity: Severity;
+  status: ErrorStatus;
   endpoint: string | null;
   fingerprint: string;
   firstSeenAt: number;
@@ -54,6 +61,7 @@ export type TimeRange = 'last-hour' | 'last-24h' | 'last-7d' | 'last-30d';
 export interface ErrorFilters {
   service?: string;
   severity?: Severity;
+  status?: ErrorStatus;
   timeRange?: TimeRange;
   search?: string;
   page?: number;   // default 1

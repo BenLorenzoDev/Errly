@@ -12,7 +12,7 @@ import { generateFingerprint } from '../utils/fingerprint.js';
 import dns from 'node:dns/promises';
 import net from 'node:net';
 import { logger } from '../utils/logger.js';
-import type { ErrlyError, ErrlyErrorSummary, Severity } from '../../shared/types.js';
+import type { ErrlyError, ErrlyErrorSummary, ErrorStatus, Severity } from '../../shared/types.js';
 
 // --- Severity ordering for escalation ---
 
@@ -62,6 +62,7 @@ export function processError(input: ProcessErrorInput): ProcessErrorResult {
         id: errors.id,
         occurrenceCount: errors.occurrenceCount,
         severity: errors.severity,
+        status: errors.status,
       })
       .from(errors)
       .where(eq(errors.fingerprint, fingerprint))
@@ -78,6 +79,7 @@ export function processError(input: ProcessErrorInput): ProcessErrorResult {
           message: input.message,
           stackTrace: input.stackTrace ?? null,
           severity: input.severity,
+          status: 'new',
           endpoint: input.endpoint ?? null,
           rawLog: input.rawLog,
           source: input.source,
@@ -86,6 +88,7 @@ export function processError(input: ProcessErrorInput): ProcessErrorResult {
           firstSeenAt: now,
           lastSeenAt: now,
           occurrenceCount: 1,
+          statusChangedAt: now,
           createdAt: now,
         })
         .run();
@@ -97,6 +100,7 @@ export function processError(input: ProcessErrorInput): ProcessErrorResult {
         message: input.message,
         stackTrace: input.stackTrace ?? null,
         severity: input.severity,
+        status: 'new',
         endpoint: input.endpoint ?? null,
         rawLog: input.rawLog,
         source: input.source,
@@ -105,6 +109,7 @@ export function processError(input: ProcessErrorInput): ProcessErrorResult {
         firstSeenAt: now,
         lastSeenAt: now,
         occurrenceCount: 1,
+        statusChangedAt: now,
         createdAt: now,
       };
 
@@ -115,6 +120,10 @@ export function processError(input: ProcessErrorInput): ProcessErrorResult {
       ? input.severity
       : existing.severity;
 
+    // Revert resolved→new on recurrence; investigating/in-progress keep their status
+    const revertStatus = existing.status === 'resolved' ? 'new' : existing.status;
+    const statusChanged = revertStatus !== existing.status;
+
     db.update(errors)
       .set({
         lastSeenAt: now,
@@ -123,6 +132,8 @@ export function processError(input: ProcessErrorInput): ProcessErrorResult {
         rawLog: input.rawLog,
         message: input.message,
         severity: newSeverity,
+        status: revertStatus,
+        ...(statusChanged ? { statusChangedAt: now } : {}),
         endpoint: input.endpoint ?? sql`${errors.endpoint}`,
         metadata: input.metadata
           ? JSON.stringify(input.metadata)
@@ -148,6 +159,7 @@ export function processError(input: ProcessErrorInput): ProcessErrorResult {
       message: updated.message,
       stackTrace: updated.stackTrace,
       severity: updated.severity as Severity,
+      status: (updated.status ?? 'new') as ErrorStatus,
       endpoint: updated.endpoint,
       rawLog: updated.rawLog,
       source: updated.source as 'auto-capture' | 'direct',
@@ -156,6 +168,7 @@ export function processError(input: ProcessErrorInput): ProcessErrorResult {
       firstSeenAt: updated.firstSeenAt,
       lastSeenAt: updated.lastSeenAt,
       occurrenceCount: updated.occurrenceCount,
+      statusChangedAt: updated.statusChangedAt,
       createdAt: updated.createdAt,
     };
 
@@ -178,6 +191,7 @@ function toSummary(error: ErrlyError): ErrlyErrorSummary {
     serviceName: error.serviceName,
     message: error.message,
     severity: error.severity,
+    status: error.status,
     endpoint: error.endpoint,
     fingerprint: error.fingerprint,
     firstSeenAt: error.firstSeenAt,

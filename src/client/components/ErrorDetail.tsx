@@ -7,8 +7,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../lib/api';
+import { useErrors } from '../hooks/useErrors';
 import { CopyForClaude } from './CopyForClaude';
-import type { ErrlyError, ErrlyErrorSummary } from '@shared/types';
+import type { ErrlyError, ErrlyErrorSummary, ErrorStatus } from '@shared/types';
+
+const STATUS_OPTIONS: { value: ErrorStatus; label: string; bg: string; activeBg: string; text: string; activeText: string }[] = [
+  { value: 'new', label: 'New', bg: 'bg-slate-700', activeBg: 'bg-blue-500/20', text: 'text-slate-400', activeText: 'text-blue-300' },
+  { value: 'investigating', label: 'Investigating', bg: 'bg-slate-700', activeBg: 'bg-amber-500/20', text: 'text-slate-400', activeText: 'text-amber-300' },
+  { value: 'in-progress', label: 'In Progress', bg: 'bg-slate-700', activeBg: 'bg-indigo-500/20', text: 'text-slate-400', activeText: 'text-indigo-300' },
+  { value: 'resolved', label: 'Resolved', bg: 'bg-slate-700', activeBg: 'bg-green-500/20', text: 'text-slate-400', activeText: 'text-green-300' },
+];
 
 interface ErrorDetailProps {
   errorId: string;
@@ -78,6 +86,8 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
   const [relatedErrors, setRelatedErrors] = useState<ErrlyErrorSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  const { updateStatus } = useErrors();
 
   const loadError = useCallback(async () => {
     setIsLoading(true);
@@ -106,6 +116,19 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
   useEffect(() => {
     loadError();
   }, [loadError]);
+
+  const handleStatusChange = useCallback(async (newStatus: ErrorStatus) => {
+    if (!error || error.status === newStatus || statusUpdating) return;
+    setStatusUpdating(true);
+    try {
+      await updateStatus(error.id, newStatus);
+      setError((prev) => prev ? { ...prev, status: newStatus, statusChangedAt: Date.now() } : prev);
+    } catch {
+      // silent — the list will still update via SSE
+    } finally {
+      setStatusUpdating(false);
+    }
+  }, [error, statusUpdating, updateStatus]);
 
   const handleBack = () => {
     history.back();
@@ -257,6 +280,28 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
               <h2 className="text-lg font-medium text-slate-100 break-words">
                 {error.message}
               </h2>
+
+              {/* Status button group */}
+              <div className="flex items-center gap-1 mt-3">
+                <span className="text-xs text-slate-500 mr-2">Status:</span>
+                {STATUS_OPTIONS.map((opt) => {
+                  const isActive = error.status === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => handleStatusChange(opt.value)}
+                      disabled={statusUpdating}
+                      className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
+                        isActive
+                          ? `${opt.activeBg} ${opt.activeText} border-current`
+                          : `${opt.bg} ${opt.text} border-slate-600 hover:border-slate-500`
+                      } ${statusUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* CopyForClaude */}

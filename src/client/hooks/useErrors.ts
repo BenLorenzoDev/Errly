@@ -10,6 +10,7 @@ import { useErrorsContext } from '../App';
 import type {
   ErrorFilters,
   ErrorListResponse,
+  ErrorStatus,
   SSEEvent,
   ErrlyErrorSummary,
 } from '@shared/types';
@@ -27,6 +28,7 @@ export function useErrors() {
         if (activeFilters.service) params.service = activeFilters.service;
         if (activeFilters.severity) params.severity = activeFilters.severity;
         if (activeFilters.timeRange) params.timeRange = activeFilters.timeRange;
+        if (activeFilters.status) params.status = activeFilters.status;
         if (activeFilters.search) params.search = activeFilters.search;
         if (activeFilters.page) params.page = activeFilters.page;
         if (activeFilters.limit) params.limit = activeFilters.limit;
@@ -69,6 +71,18 @@ export function useErrors() {
     dispatch({ type: 'SET_FILTERS', payload: { page: 1, limit: 50 } });
   }, [dispatch]);
 
+  const updateStatus = useCallback(
+    async (id: string, status: ErrorStatus) => {
+      const updated = await api.patch<ErrlyErrorSummary>(
+        `/api/errors/${id}/status`,
+        { status },
+      );
+      dispatch({ type: 'UPDATE_ERROR', payload: updated });
+      return updated;
+    },
+    [dispatch],
+  );
+
   const handleSSEEvent = useCallback(
     (event: SSEEvent) => {
       switch (event.type) {
@@ -103,6 +117,7 @@ export function useErrors() {
     fetchErrors,
     setFilter,
     clearFilters,
+    updateStatus,
     handleSSEEvent,
   };
 }

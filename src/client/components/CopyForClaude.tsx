@@ -23,6 +23,7 @@ function formatForClaude(
   lines.push('[Errly Error Report]');
   lines.push(`Service: ${error.serviceName}`);
   lines.push(`Severity: ${error.severity}`);
+  lines.push(`Status: ${error.status}`);
 
   const firstSeen = new Date(error.firstSeenAt).toISOString();
   const lastSeen = new Date(error.lastSeenAt).toISOString();

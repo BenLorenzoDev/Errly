@@ -35,6 +35,12 @@ export const errors = sqliteTable(
 
     fingerprint: text('fingerprint').notNull(),
 
+    status: text('status').notNull().default('new'), // 'new' | 'investigating' | 'in-progress' | 'resolved'
+
+    statusChangedAt: integer('status_changed_at')
+      .notNull()
+      .$defaultFn(() => Date.now()),
+
     firstSeenAt: integer('first_seen_at')
       .notNull()
       .$defaultFn(() => Date.now()),
@@ -56,6 +62,7 @@ export const errors = sqliteTable(
     index('idx_errors_last_seen_at').on(table.lastSeenAt),
     index('idx_errors_created_at').on(table.createdAt),
     index('idx_errors_service_last_seen').on(table.serviceName, table.lastSeenAt),
+    index('idx_errors_status').on(table.status),
   ]
 );
 

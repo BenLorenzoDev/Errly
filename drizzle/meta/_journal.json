@@ -8,6 +8,13 @@
       "when": 1770897266289,
       "tag": "0000_gigantic_star_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1770919102995,
+      "tag": "0001_superb_mindworm",
+      "breakpoints": true
     }
   ]
 }

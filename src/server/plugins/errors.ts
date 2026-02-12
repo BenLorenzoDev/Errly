@@ -19,6 +19,7 @@ import type {
   DirectErrorPayload,
   DeleteErrorsRequest,
   Severity,
+  ErrorStatus,
   TimeRange,
   SSEEvent,
 } from '../../shared/types.js';
@@ -48,6 +49,9 @@ export default async function errorsPlugin(fastify: FastifyInstance): Promise<vo
     if (query.service) filters.service = query.service;
     if (query.severity && ['error', 'warn', 'fatal'].includes(query.severity)) {
       filters.severity = query.severity as Severity;
+    }
+    if (query.status && ['new', 'investigating', 'in-progress', 'resolved'].includes(query.status)) {
+      filters.status = query.status as ErrorStatus;
     }
     if (query.timeRange && ['last-hour', 'last-24h', 'last-7d', 'last-30d'].includes(query.timeRange)) {
       filters.timeRange = query.timeRange as TimeRange;
@@ -97,6 +101,34 @@ export default async function errorsPlugin(fastify: FastifyInstance): Promise<vo
 
     const related = errorStore.getRelatedErrors(id, windowMinutes);
     return reply.status(200).send(related);
+  });
+
+  // PATCH /api/errors/:id/status — update error status
+  fastify.patch('/api/errors/:id/status', {
+    preHandler: [requireAuth],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as { status?: string } | undefined;
+
+    if (!body?.status || !['new', 'investigating', 'in-progress', 'resolved'].includes(body.status)) {
+      return reply.status(400).send({
+        error: 'Invalid status. Must be one of: new, investigating, in-progress, resolved',
+      });
+    }
+
+    const updated = errorStore.updateErrorStatus(id, body.status as ErrorStatus);
+    if (!updated) {
+      return reply.status(404).send({ error: 'Error not found' });
+    }
+
+    // Broadcast status change to SSE clients
+    if (broadcastFn) {
+      broadcastFn({ type: 'error-updated', payload: updated });
+    }
+
+    logger.info('Error status updated', { id, status: body.status });
+
+    return reply.status(200).send(updated);
   });
 
   // POST /api/errors — direct integration endpoint (token auth)

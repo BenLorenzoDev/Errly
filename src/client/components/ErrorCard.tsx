@@ -4,7 +4,7 @@
 // truncated message, endpoint badge, occurrence count, timestamps.
 // ============================================================================
 
-import type { ErrlyErrorSummary } from '@shared/types';
+import type { ErrlyErrorSummary, ErrorStatus } from '@shared/types';
 
 interface ErrorCardProps {
   error: ErrlyErrorSummary;
@@ -64,8 +64,25 @@ function severityColor(severity: string): {
   }
 }
 
+function statusStyle(status: ErrorStatus): { bg: string; text: string; label: string } {
+  switch (status) {
+    case 'new':
+      return { bg: 'bg-blue-500/10', text: 'text-blue-400', label: 'New' };
+    case 'investigating':
+      return { bg: 'bg-amber-500/10', text: 'text-amber-400', label: 'Investigating' };
+    case 'in-progress':
+      return { bg: 'bg-indigo-500/10', text: 'text-indigo-400', label: 'In Progress' };
+    case 'resolved':
+      return { bg: 'bg-green-500/10', text: 'text-green-400', label: 'Resolved' };
+    default:
+      return { bg: 'bg-slate-500/10', text: 'text-slate-400', label: status };
+  }
+}
+
 export function ErrorCard({ error, isNew }: ErrorCardProps) {
   const colors = severityColor(error.severity);
+  const stStyle = statusStyle(error.status);
+  const isResolved = error.status === 'resolved';
 
   const handleClick = () => {
     window.location.hash = `#/errors/${error.id}`;
@@ -74,7 +91,7 @@ export function ErrorCard({ error, isNew }: ErrorCardProps) {
   return (
     <button
       onClick={handleClick}
-      className={`w-full text-left bg-slate-800 hover:bg-slate-800/80 border border-slate-700 border-l-4 ${colors.border} rounded-lg p-4 transition-all cursor-pointer group ${isNew ? 'error-new' : ''}`}
+      className={`w-full text-left bg-slate-800 hover:bg-slate-800/80 border border-slate-700 border-l-4 ${colors.border} rounded-lg p-4 transition-all cursor-pointer group ${isNew ? 'error-new' : ''} ${isResolved ? 'opacity-50' : ''}`}
     >
       <div className="flex items-start justify-between gap-4">
         {/* Left: Severity + Message */}
@@ -104,6 +121,13 @@ export function ErrorCard({ error, isNew }: ErrorCardProps) {
                 {error.endpoint}
               </span>
             )}
+
+            {/* Status badge */}
+            <span
+              className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${stStyle.bg} ${stStyle.text}`}
+            >
+              {stStyle.label}
+            </span>
           </div>
 
           {/* Error message (truncated to 2 lines) */}

@@ -14,6 +14,7 @@ import type {
   DashboardStats,
   ServiceInfo,
   Severity,
+  ErrorStatus,
   TimeRange,
 } from '../../shared/types.js';
 
@@ -39,6 +40,7 @@ function rowToError(row: typeof errors.$inferSelect): ErrlyError {
     message: row.message,
     stackTrace: row.stackTrace,
     severity: row.severity as Severity,
+    status: (row.status ?? 'new') as ErrorStatus,
     endpoint: row.endpoint,
     rawLog: row.rawLog,
     source: row.source as 'auto-capture' | 'direct',
@@ -47,6 +49,7 @@ function rowToError(row: typeof errors.$inferSelect): ErrlyError {
     firstSeenAt: row.firstSeenAt,
     lastSeenAt: row.lastSeenAt,
     occurrenceCount: row.occurrenceCount,
+    statusChangedAt: row.statusChangedAt,
     createdAt: row.createdAt,
   };
 }
@@ -59,6 +62,7 @@ function rowToSummary(row: typeof errors.$inferSelect): ErrlyErrorSummary {
     serviceName: row.serviceName,
     message: row.message,
     severity: row.severity as Severity,
+    status: (row.status ?? 'new') as ErrorStatus,
     endpoint: row.endpoint,
     fingerprint: row.fingerprint,
     firstSeenAt: row.firstSeenAt,
@@ -82,6 +86,10 @@ export function getErrors(filters: ErrorFilters): { errors: ErrlyErrorSummary[];
 
   if (filters.severity) {
     conditions.push(eq(errors.severity, filters.severity));
+  }
+
+  if (filters.status) {
+    conditions.push(eq(errors.status, filters.status));
   }
 
   if (filters.timeRange) {
@@ -276,6 +284,28 @@ export function getServices(): ServiceInfo[] {
     deploymentId: row.deploymentId,
     status: 'active',
   }));
+}
+
+// --- Update error status ---
+
+const VALID_STATUSES: ErrorStatus[] = ['new', 'investigating', 'in-progress', 'resolved'];
+
+export function updateErrorStatus(id: string, status: ErrorStatus): ErrlyErrorSummary | null {
+  if (!VALID_STATUSES.includes(status)) return null;
+
+  const existing = db.select().from(errors).where(eq(errors.id, id)).get();
+  if (!existing) return null;
+
+  const now = Date.now();
+  db.update(errors)
+    .set({ status, statusChangedAt: now })
+    .where(eq(errors.id, id))
+    .run();
+
+  const updated = db.select().from(errors).where(eq(errors.id, id)).get();
+  if (!updated) return null;
+
+  return rowToSummary(updated);
 }
 
 // --- Delete old errors by retention policy (returns deleted IDs) ---
