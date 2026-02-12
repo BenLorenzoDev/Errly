@@ -13,6 +13,7 @@ export const DEPLOYMENT_LOGS_SUBSCRIPTION = `
     deploymentLogs(deploymentId: $deploymentId, filter: $filter, limit: $limit) {
       timestamp
       message
+      severity
     }
   }
 `;
@@ -22,6 +23,7 @@ export const DEPLOYMENT_LOGS_SUBSCRIPTION = `
 export interface LogEntry {
   timestamp: string;
   message: string;
+  severity?: string;
 }
 
 // --- Subscribe to deployment logs via async generator ---

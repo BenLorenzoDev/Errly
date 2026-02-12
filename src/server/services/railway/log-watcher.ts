@@ -212,6 +212,19 @@ export class LogWatcher {
         }
       }
 
+      // Reopen dead/closed subscriptions that are still desired
+      for (const dep of deployments) {
+        const existing = this.subscriptions.get(dep.id);
+        if (existing && existing.status === 'closed') {
+          logger.info('Reopening closed subscription', {
+            deploymentId: dep.id,
+            serviceName: existing.serviceName,
+          });
+          await this.closeSubscription(dep.id, existing);
+          this.subscriptions.delete(dep.id);
+        }
+      }
+
       // Open new subscriptions (respecting max cap)
       for (const dep of deployments) {
         if (this.subscriptions.has(dep.id)) continue;
@@ -331,11 +344,24 @@ export class LogWatcher {
 
       if (result) {
         this.processCompleteError(serviceName, deploymentId, result);
-      } else {
-        // Even if not a stack trace, check if it's a single-line error
-        const parsed = isErrorLog(log.message);
-        if (parsed.isError && !assembler.isCollecting()) {
-          // Single-line error that the assembler didn't catch (already handled by assembler)
+      } else if (!assembler.isCollecting()) {
+        // The assembler didn't detect an error from the message text alone.
+        // Check if Railway's severity metadata indicates an error/warning.
+        const railwaySeverity = log.severity?.toLowerCase();
+        if (railwaySeverity && railwaySeverity !== 'info' && railwaySeverity !== 'debug') {
+          const severity = railwaySeverity === 'fatal' || railwaySeverity === 'critical'
+            ? 'fatal' as const
+            : railwaySeverity === 'warn' || railwaySeverity === 'warning'
+              ? 'warn' as const
+              : 'error' as const;
+
+          this.processCompleteError(serviceName, deploymentId, {
+            message: log.message,
+            stackTrace: log.message,
+            severity,
+            endpoint: extractEndpoint(log.message),
+            rawLog: log.message,
+          });
         }
       }
     }
