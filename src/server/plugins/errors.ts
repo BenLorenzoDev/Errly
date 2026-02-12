@@ -13,6 +13,7 @@ import { logger } from '../utils/logger.js';
 import { requireAuth } from './auth.js';
 import { processError, errorToSummary } from '../services/error-grouper.js';
 import * as errorStore from '../services/error-store.js';
+import { getLogWatcher } from '../services/railway/log-watcher.js';
 import type {
   ErrorFilters,
   DirectErrorPayload,
@@ -243,11 +244,30 @@ export default async function errorsPlugin(fastify: FastifyInstance): Promise<vo
     });
   });
 
-  // GET /api/services — list discovered services
+  // GET /api/services — list discovered services (DB + active subscriptions)
   fastify.get('/api/services', {
     preHandler: [requireAuth],
   }, async (_request, reply) => {
     const services = errorStore.getServices();
+
+    // Merge in actively subscribed services from log watcher (even if no errors yet)
+    const logWatcher = getLogWatcher();
+    if (logWatcher) {
+      const subscribed = logWatcher.getSubscriptionInfo();
+      const knownNames = new Set(services.map((s) => s.name));
+      for (const sub of subscribed) {
+        if (!knownNames.has(sub.serviceName)) {
+          services.push({
+            id: `sub-${sub.deploymentId}`,
+            name: sub.serviceName,
+            alias: undefined,
+            deploymentId: sub.deploymentId,
+            status: 'active',
+          });
+        }
+      }
+    }
+
     return reply.status(200).send(services);
   });
 
