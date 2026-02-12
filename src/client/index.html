@@ -8,6 +8,11 @@
     <title>Errly</title>
   </head>
   <body>
+    <script>
+      // Apply saved theme before React renders to prevent flash
+      var t = localStorage.getItem('errly-theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    </script>
     <div id="root"></div>
     <script type="module" src="./main.tsx"></script>
   </body>
