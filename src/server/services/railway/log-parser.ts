@@ -159,6 +159,19 @@ const DOTNET_ERROR_PATTERNS = [
   /\bNullReferenceException\b/,
 ];
 
+// Info/debug level markers — lines containing these are NOT errors even if
+// the bracket prefix says [err] (common with stderr-routed info logs on Railway)
+const INFO_LEVEL_OVERRIDES = [
+  /\blevel=info\b/i,
+  /\blevel=debug\b/i,
+  /\blevel=trace\b/i,
+  /"level"\s*:\s*"info"/i,
+  /"level"\s*:\s*"debug"/i,
+  /"level"\s*:\s*"trace"/i,
+  /\blevel=INFO\b/,       // Prometheus/Go exact match
+  /\bINFO\s+source=/,     // Go-style: `level=INFO source=compact.go`
+];
+
 const STACK_TRACE_START_PATTERNS = [
   /^\s+at\s+/,                    // Node.js / Java / .NET
   /^Traceback/,                   // Python
@@ -172,6 +185,16 @@ const STACK_TRACE_START_PATTERNS = [
 ];
 
 // --- Endpoint Extraction ---
+
+/** Returns true if the message contains a structured info/debug/trace level
+ *  marker, meaning it should NOT be treated as an error even if the outer
+ *  bracket prefix or Railway severity says otherwise. */
+export function isInfoLevelOverride(message: string): boolean {
+  for (const pattern of INFO_LEVEL_OVERRIDES) {
+    if (pattern.test(message)) return true;
+  }
+  return false;
+}
 
 export function extractEndpoint(message: string): string | null {
   // Pattern: "METHOD /path" 5xx STATUS
@@ -283,6 +306,18 @@ function classifySeverity(message: string): 'error' | 'warn' | 'fatal' {
 
 export function isErrorLog(message: string): ParsedLogLine {
   const trimmed = message.trim();
+
+  // Skip lines that contain structured info/debug/trace level markers.
+  // These are often info logs routed through stderr and tagged [err] by Railway.
+  for (const pattern of INFO_LEVEL_OVERRIDES) {
+    if (pattern.test(trimmed)) {
+      return {
+        isError: false,
+        severity: 'error',
+        parsedMessage: trimmed,
+      };
+    }
+  }
 
   // Check stack trace start patterns
   for (const pattern of STACK_TRACE_START_PATTERNS) {

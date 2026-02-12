@@ -21,6 +21,7 @@ import {
   clearAllAssemblers,
   getAssemblerKeys,
   isErrorLog,
+  isInfoLevelOverride,
   extractEndpoint,
   type CompleteError,
 } from './log-parser.js';
@@ -347,8 +348,11 @@ export class LogWatcher {
       } else if (!assembler.isCollecting()) {
         // The assembler didn't detect an error from the message text alone.
         // Check if Railway's severity metadata indicates an error/warning.
+        // But skip if the message body has a structured info/debug level
+        // (common with stderr-routed info logs tagged [err] by Railway).
         const railwaySeverity = log.severity?.toLowerCase();
-        if (railwaySeverity && railwaySeverity !== 'info' && railwaySeverity !== 'debug') {
+        if (railwaySeverity && railwaySeverity !== 'info' && railwaySeverity !== 'debug'
+            && !isInfoLevelOverride(log.message)) {
           const severity = railwaySeverity === 'fatal' || railwaySeverity === 'critical'
             ? 'fatal' as const
             : railwaySeverity === 'warn' || railwaySeverity === 'warning'
