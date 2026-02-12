@@ -32,6 +32,7 @@ type TraceLanguage = 'nodejs' | 'python' | 'go' | 'java' | 'ruby' | 'rust' | 'ph
 
 const ERROR_MARKERS = [
   /\[ERROR\]/i,
+  /\[ERR\]/i,                       // Abbreviated bracket style (e.g. campaign-service)
   /\[FATAL\]/i,
   /\[CRITICAL\]/i,
   /\bERROR:/,
@@ -93,6 +94,7 @@ const WARNING_PATTERNS = [
 
 const WARN_MARKERS = [
   /\[WARN\]/i,
+  /\[WRN\]/i,                      // Abbreviated bracket style (e.g. campaign-service)
   /\[WARNING\]/i,
   /\bWARN:/i,
   /\bWARNING:/i,
