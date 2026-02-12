@@ -79,8 +79,20 @@ function loadConfig(): Config {
   const railwayEnvironmentName = process.env.RAILWAY_ENVIRONMENT_NAME || null;
   const railwayServiceId = process.env.RAILWAY_SERVICE_ID || null;
 
-  // --- ERRLY_DB_PATH (optional, default ./data/errly.db) ---
-  const dbPath = process.env.ERRLY_DB_PATH || './data/errly.db';
+  // --- ERRLY_DB_PATH (optional) ---
+  // On Railway, default to /data/errly.db (persistent volume mount point).
+  // Locally, default to ./data/errly.db (relative to working directory).
+  const isRailway = !!railwayProjectId;
+  const defaultDbPath = isRailway ? '/data/errly.db' : './data/errly.db';
+  const dbPath = process.env.ERRLY_DB_PATH || defaultDbPath;
+
+  if (isRailway && !dbPath.startsWith('/data/')) {
+    logger.warn(
+      'WARNING: ERRLY_DB_PATH is not under /data/ on Railway. ' +
+      'Data WILL be lost on redeploy unless you mount a Volume at /data. ' +
+      'Set ERRLY_DB_PATH=/data/errly.db or attach a Railway Volume.',
+    );
+  }
 
   // --- ERRLY_MAX_SUBSCRIPTIONS (optional, default 50) ---
   const maxSubsStr = process.env.ERRLY_MAX_SUBSCRIPTIONS;
