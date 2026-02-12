@@ -79,11 +79,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const isDisabled = isSubmitting || retryCountdown > 0;
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+    <div className="login-bg min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         {/* Logo / Branding */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 border border-indigo-500/20 mb-5 shadow-lg shadow-indigo-500/5">
             <svg
               className="w-8 h-8 text-indigo-400"
               fill="none"
@@ -98,19 +98,19 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-100">Errly</h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">Errly</h1>
+          <p className="text-slate-500 text-sm mt-1.5">
             Error Observability Dashboard
           </p>
         </div>
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 space-y-4">
+          <div className="glass-card rounded-xl border border-slate-700/60 p-6 space-y-4 shadow-xl shadow-black/20">
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-slate-300 mb-1.5"
+                className="block text-sm font-medium text-slate-300 mb-2"
               >
                 Dashboard Password
               </label>
@@ -122,14 +122,14 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isDisabled}
                 placeholder="Enter password"
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-md text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3.5 py-2.5 bg-slate-900/80 border border-slate-600/60 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 autoComplete="current-password"
               />
             </div>
 
             {/* Error message */}
             {error && (
-              <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">
+              <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/8 border border-red-500/15 rounded-lg px-3 py-2.5">
                 <svg
                   className="w-4 h-4 shrink-0"
                   fill="none"
@@ -149,7 +149,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
             {/* Rate limit countdown */}
             {retryCountdown > 0 && (
-              <div className="flex items-center gap-2 text-sm text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md px-3 py-2">
+              <div className="flex items-center gap-2 text-sm text-amber-400 bg-amber-500/8 border border-amber-500/15 rounded-lg px-3 py-2.5">
                 <svg
                   className="w-4 h-4 shrink-0"
                   fill="none"
@@ -173,7 +173,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             <button
               type="submit"
               disabled={isDisabled || !password.trim()}
-              className="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:cursor-not-allowed"
+              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700/70 disabled:text-slate-500 text-white font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/20"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
@@ -187,7 +187,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           </div>
         </form>
 
-        <p className="text-center text-xs text-slate-500 mt-6">
+        <p className="text-center text-xs text-slate-600 mt-6">
           Set via ERRLY_PASSWORD environment variable
         </p>
       </div>

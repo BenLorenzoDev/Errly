@@ -1,7 +1,7 @@
 // ============================================================================
 // Errly — FilterBar Component
-// Service dropdown, severity dropdown, time range pills, debounced search,
-// active filter indicators, clear all.
+// Service dropdown, severity dropdown, status dropdown, time range pills,
+// debounced search, active filter indicators, clear all.
 // ============================================================================
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -11,10 +11,10 @@ import { useErrorsContext } from '../App';
 import type { ServiceInfo, TimeRange, Severity, ErrorStatus } from '@shared/types';
 
 const TIME_RANGES: { value: TimeRange; label: string }[] = [
-  { value: 'last-hour', label: 'Last hour' },
-  { value: 'last-24h', label: 'Last 24h' },
-  { value: 'last-7d', label: 'Last 7d' },
-  { value: 'last-30d', label: 'Last 30d' },
+  { value: 'last-hour', label: '1h' },
+  { value: 'last-24h', label: '24h' },
+  { value: 'last-7d', label: '7d' },
+  { value: 'last-30d', label: '30d' },
 ];
 
 const SEVERITIES: { value: Severity | ''; label: string }[] = [
@@ -89,12 +89,12 @@ export function FilterBar() {
   return (
     <div className="space-y-3">
       {/* Filter controls row */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Service dropdown */}
         <select
           value={state.filters.service ?? ''}
           onChange={(e) => setFilter('service', e.target.value || undefined)}
-          className="px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-md text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="px-3 py-1.5 bg-slate-800/80 border border-slate-700/60 rounded-lg text-sm text-slate-200 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/30 transition-colors"
         >
           <option value="">All services</option>
           {services.map((svc) => (
@@ -113,7 +113,7 @@ export function FilterBar() {
               (e.target.value as Severity) || undefined,
             )
           }
-          className="px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-md text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="px-3 py-1.5 bg-slate-800/80 border border-slate-700/60 rounded-lg text-sm text-slate-200 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/30 transition-colors"
         >
           {SEVERITIES.map((sev) => (
             <option key={sev.value} value={sev.value}>
@@ -131,7 +131,7 @@ export function FilterBar() {
               (e.target.value as ErrorStatus) || undefined,
             )
           }
-          className="px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-md text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className="px-3 py-1.5 bg-slate-800/80 border border-slate-700/60 rounded-lg text-sm text-slate-200 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/30 transition-colors"
         >
           {STATUSES.map((st) => (
             <option key={st.value} value={st.value}>
@@ -141,7 +141,7 @@ export function FilterBar() {
         </select>
 
         {/* Time range pills */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 bg-slate-800/50 border border-slate-700/40 rounded-lg p-0.5">
           {TIME_RANGES.map((tr) => (
             <button
               key={tr.value}
@@ -153,10 +153,10 @@ export function FilterBar() {
                     : tr.value,
                 )
               }
-              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
                 state.filters.timeRange === tr.value
-                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
-                  : 'bg-slate-800 text-slate-400 border border-slate-600 hover:border-slate-500 hover:text-slate-300'
+                  ? 'bg-indigo-500/20 text-indigo-300 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-300'
               }`}
             >
               {tr.label}
@@ -165,7 +165,7 @@ export function FilterBar() {
         </div>
 
         {/* Search input */}
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative flex-1 min-w-[180px]">
           <svg
             className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"
             fill="none"
@@ -184,12 +184,12 @@ export function FilterBar() {
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search errors..."
-            className="w-full pl-8 pr-3 py-1.5 bg-slate-800 border border-slate-600 rounded-md text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full pl-8 pr-8 py-1.5 bg-slate-800/80 border border-slate-700/60 rounded-lg text-sm text-slate-200 placeholder-slate-500 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/30 transition-colors"
           />
           {searchValue && (
             <button
               onClick={() => handleSearchChange('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -202,39 +202,53 @@ export function FilterBar() {
       {/* Active filter indicators */}
       {activeFilterCount > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-slate-500">Active filters:</span>
+          <span className="text-[11px] uppercase tracking-wider text-slate-600 font-medium">Filters</span>
 
           {state.filters.service && (
             <FilterBadge
-              label={`Service: ${state.filters.service}`}
+              label={state.filters.service}
+              color="bg-slate-500"
               onRemove={() => setFilter('service', undefined)}
             />
           )}
 
           {state.filters.severity && (
             <FilterBadge
-              label={`Severity: ${state.filters.severity}`}
+              label={state.filters.severity}
+              color={
+                state.filters.severity === 'fatal' ? 'bg-purple-400'
+                  : state.filters.severity === 'error' ? 'bg-red-400'
+                  : 'bg-amber-400'
+              }
               onRemove={() => setFilter('severity', undefined)}
             />
           )}
 
           {state.filters.status && (
             <FilterBadge
-              label={`Status: ${STATUSES.find((s) => s.value === state.filters.status)?.label ?? state.filters.status}`}
+              label={STATUSES.find((s) => s.value === state.filters.status)?.label ?? state.filters.status}
+              color={
+                state.filters.status === 'new' ? 'bg-blue-400'
+                  : state.filters.status === 'investigating' ? 'bg-amber-400'
+                  : state.filters.status === 'in-progress' ? 'bg-indigo-400'
+                  : 'bg-green-400'
+              }
               onRemove={() => setFilter('status', undefined)}
             />
           )}
 
           {state.filters.timeRange && (
             <FilterBadge
-              label={`Time: ${TIME_RANGES.find((t) => t.value === state.filters.timeRange)?.label ?? state.filters.timeRange}`}
+              label={TIME_RANGES.find((t) => t.value === state.filters.timeRange)?.label ?? state.filters.timeRange}
+              color="bg-indigo-400"
               onRemove={() => setFilter('timeRange', undefined)}
             />
           )}
 
           {state.filters.search && (
             <FilterBadge
-              label={`Search: "${state.filters.search}"`}
+              label={`"${state.filters.search}"`}
+              color="bg-slate-400"
               onRemove={() => {
                 setSearchValue('');
                 setFilter('search', undefined);
@@ -244,7 +258,7 @@ export function FilterBar() {
 
           <button
             onClick={handleClearAll}
-            className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors ml-1"
+            className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors ml-1 underline underline-offset-2"
           >
             Clear all
           </button>
@@ -256,17 +270,20 @@ export function FilterBar() {
 
 function FilterBadge({
   label,
+  color,
   onRemove,
 }: {
   label: string;
+  color: string;
   onRemove: () => void;
 }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-700 border border-slate-600 rounded-md text-xs text-slate-300">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-800/60 border border-slate-700/50 rounded-full text-xs text-slate-300">
+      <span className={`w-1.5 h-1.5 rounded-full ${color}`} />
       {label}
       <button
         onClick={onRemove}
-        className="text-slate-500 hover:text-slate-300 transition-colors"
+        className="text-slate-500 hover:text-slate-300 transition-colors ml-0.5"
       >
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

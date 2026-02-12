@@ -100,15 +100,15 @@ export function Layout({ children, onLogout }: LayoutProps) {
   return (
     <div className="min-h-screen bg-slate-900">
       {/* Header */}
-      <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-30">
+      <header className="header-gradient border-b border-slate-700/50 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             {/* Left: Logo + Name */}
             <div className="flex items-center gap-3">
-              <a href="#/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <div className="w-7 h-7 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
+              <a href="#/" className="flex items-center gap-2.5 group">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/30 flex items-center justify-center group-hover:border-indigo-400/50 transition-colors">
                   <svg
-                    className="w-4 h-4 text-indigo-400"
+                    className="w-4.5 h-4.5 text-indigo-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -121,82 +121,85 @@ export function Layout({ children, onLogout }: LayoutProps) {
                     />
                   </svg>
                 </div>
-                <span className="text-lg font-semibold text-slate-100">
+                <span className="text-lg font-semibold text-slate-100 tracking-tight">
                   Errly
                 </span>
               </a>
             </div>
 
             {/* Center: Stats Summary */}
-            <div className="hidden sm:flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-1.5">
-                <span className="text-slate-400">Errors:</span>
-                <span className="text-slate-100 font-medium tabular-nums">
-                  {stats?.totalErrors ?? '--'}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-slate-400">Services:</span>
-                <span className="text-slate-100 font-medium tabular-nums">
-                  {stats?.activeServices ?? '--'}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-slate-400">Last hour:</span>
-                <span className="text-slate-100 font-medium tabular-nums">
-                  {stats?.errorsLastHour ?? '--'}
-                </span>
-              </div>
+            <div className="hidden md:flex items-center gap-1.5">
+              <StatPill
+                label="Errors"
+                value={stats?.totalErrors}
+                color="text-slate-100"
+              />
+              <StatPill
+                label="Services"
+                value={stats?.activeServices}
+                color="text-slate-100"
+              />
+              <StatPill
+                label="Last hour"
+                value={stats?.errorsLastHour}
+                color={
+                  (stats?.errorsLastHour ?? 0) > 0
+                    ? 'text-amber-400'
+                    : 'text-slate-100'
+                }
+              />
             </div>
 
             {/* Right: Status indicators + Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {/* Connection status */}
               <div
-                className="flex items-center gap-1.5 text-xs"
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                  isConnected
+                    ? 'bg-green-500/10 text-green-400'
+                    : 'bg-red-500/10 text-red-400'
+                }`}
                 title={
                   isConnected ? 'Live connection active' : 'Disconnected — reconnecting...'
                 }
               >
                 <span
-                  className={`w-2 h-2 rounded-full ${
+                  className={`w-1.5 h-1.5 rounded-full ${
                     isConnected
-                      ? 'bg-green-500 pulse-dot'
-                      : 'bg-red-500'
+                      ? 'bg-green-400 pulse-dot'
+                      : 'bg-red-400'
                   }`}
                 />
-                <span className={isConnected ? 'text-green-400' : 'text-red-400'}>
-                  {isConnected ? 'Live' : 'Offline'}
-                </span>
+                {isConnected ? 'Live' : 'Offline'}
               </div>
 
               {/* Auto-capture status */}
-              <div className="flex items-center gap-1.5 text-xs">
+              <div
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                  autoCaptureEnabled
+                    ? 'bg-indigo-500/10 text-indigo-400'
+                    : 'bg-slate-700/50 text-slate-500'
+                }`}
+              >
                 <span
-                  className={`w-2 h-2 rounded-full ${
-                    autoCaptureEnabled ? 'bg-indigo-500' : 'bg-slate-500'
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    autoCaptureEnabled ? 'bg-indigo-400' : 'bg-slate-500'
                   }`}
                 />
-                <span
-                  className={
-                    autoCaptureEnabled ? 'text-indigo-400' : 'text-slate-500'
-                  }
-                >
-                  {autoCaptureEnabled ? 'Auto' : 'Manual'}
-                </span>
+                {autoCaptureEnabled ? 'Auto' : 'Manual'}
               </div>
 
               {/* Separator */}
-              <div className="w-px h-5 bg-slate-700" />
+              <div className="w-px h-5 bg-slate-700/70 mx-0.5" />
 
               {/* Settings */}
               <a
                 href="#/settings"
-                className="p-1.5 text-slate-400 hover:text-slate-200 rounded-md hover:bg-slate-700 transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-white/5 transition-colors"
                 title="Settings"
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-[18px] h-[18px]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -219,11 +222,11 @@ export function Layout({ children, onLogout }: LayoutProps) {
               {/* Logout */}
               <button
                 onClick={onLogout}
-                className="p-1.5 text-slate-400 hover:text-slate-200 rounded-md hover:bg-slate-700 transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-white/5 transition-colors"
                 title="Logout"
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-[18px] h-[18px]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -243,7 +246,7 @@ export function Layout({ children, onLogout }: LayoutProps) {
 
       {/* Auto-capture disabled banner */}
       {health && !autoCaptureEnabled && (
-        <div className="bg-amber-500/10 border-b border-amber-500/20">
+        <div className="bg-amber-500/5 border-b border-amber-500/15">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <div className="flex items-center gap-2 text-sm text-amber-400">
               <svg
@@ -263,7 +266,7 @@ export function Layout({ children, onLogout }: LayoutProps) {
                 Auto-capture disabled &mdash;{' '}
                 <a
                   href="#/settings"
-                  className="underline hover:text-amber-300"
+                  className="underline underline-offset-2 hover:text-amber-300 transition-colors"
                 >
                   configure Railway API token in Settings
                 </a>
@@ -277,6 +280,25 @@ export function Layout({ children, onLogout }: LayoutProps) {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {children}
       </main>
+    </div>
+  );
+}
+
+function StatPill({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number | undefined | null;
+  color: string;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] text-sm">
+      <span className="text-slate-500 text-xs">{label}</span>
+      <span className={`font-semibold tabular-nums ${color}`}>
+        {value ?? '--'}
+      </span>
     </div>
   );
 }

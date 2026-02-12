@@ -11,11 +11,11 @@ import { useErrors } from '../hooks/useErrors';
 import { CopyForClaude } from './CopyForClaude';
 import type { ErrlyError, ErrlyErrorSummary, ErrorStatus } from '@shared/types';
 
-const STATUS_OPTIONS: { value: ErrorStatus; label: string; bg: string; activeBg: string; text: string; activeText: string }[] = [
-  { value: 'new', label: 'New', bg: 'bg-slate-700', activeBg: 'bg-blue-500/20', text: 'text-slate-400', activeText: 'text-blue-300' },
-  { value: 'investigating', label: 'Investigating', bg: 'bg-slate-700', activeBg: 'bg-amber-500/20', text: 'text-slate-400', activeText: 'text-amber-300' },
-  { value: 'in-progress', label: 'In Progress', bg: 'bg-slate-700', activeBg: 'bg-indigo-500/20', text: 'text-slate-400', activeText: 'text-indigo-300' },
-  { value: 'resolved', label: 'Resolved', bg: 'bg-slate-700', activeBg: 'bg-green-500/20', text: 'text-slate-400', activeText: 'text-green-300' },
+const STATUS_OPTIONS: { value: ErrorStatus; label: string; dot: string; activeBg: string; activeText: string; activeBorder: string }[] = [
+  { value: 'new', label: 'New', dot: 'bg-blue-400', activeBg: 'bg-blue-500/15', activeText: 'text-blue-300', activeBorder: 'border-blue-500/30' },
+  { value: 'investigating', label: 'Investigating', dot: 'bg-amber-400', activeBg: 'bg-amber-500/15', activeText: 'text-amber-300', activeBorder: 'border-amber-500/30' },
+  { value: 'in-progress', label: 'In Progress', dot: 'bg-indigo-400', activeBg: 'bg-indigo-500/15', activeText: 'text-indigo-300', activeBorder: 'border-indigo-500/30' },
+  { value: 'resolved', label: 'Resolved', dot: 'bg-green-400', activeBg: 'bg-green-500/15', activeText: 'text-green-300', activeBorder: 'border-green-500/30' },
 ];
 
 interface ErrorDetailProps {
@@ -140,24 +140,14 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
       <div className="space-y-4">
         <button
           onClick={handleBack}
-          className="flex items-center gap-1 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-colors"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back
         </button>
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 space-y-4">
+        <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-6 space-y-4">
           <div className="skeleton w-3/4 h-6 rounded" />
           <div className="skeleton w-1/2 h-4 rounded" />
           <div className="skeleton w-full h-32 rounded" />
@@ -173,30 +163,20 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
       <div className="space-y-4">
         <button
           onClick={handleBack}
-          className="flex items-center gap-1 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-colors"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back
         </button>
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 text-center">
+        <div className="bg-red-500/8 border border-red-500/15 rounded-xl p-8 text-center">
           <p className="text-red-400 mb-4">
             {fetchError ?? 'Error not found'}
           </p>
           <button
             onClick={loadError}
-            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 text-sm rounded-md transition-colors"
+            className="px-4 py-2 bg-red-500/15 hover:bg-red-500/25 text-red-300 text-sm rounded-lg transition-colors"
           >
             Retry
           </button>
@@ -213,45 +193,35 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
     : null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Back button */}
       <button
         onClick={handleBack}
-        className="flex items-center gap-1 text-sm text-slate-400 hover:text-slate-200 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-200 transition-colors"
       >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
         Back to errors
       </button>
 
       {/* Main error card */}
-      <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+      <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-slate-700">
-          <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="p-6 border-b border-slate-700/50">
+          <div className="flex items-start justify-between gap-4 mb-5">
             <div className="flex-1 min-w-0">
               {/* Badges row */}
               <div className="flex items-center gap-2 mb-3 flex-wrap">
                 {/* Severity badge */}
                 <span
-                  className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ${sevStyles.bg} ${sevStyles.text} border ${sevStyles.border}`}
+                  className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${sevStyles.bg} ${sevStyles.text} border ${sevStyles.border}`}
                 >
-                  {error.severity.toUpperCase()}
+                  {error.severity}
                 </span>
 
                 {/* Service badge */}
-                <span className="inline-flex items-center px-2.5 py-1 bg-slate-700 rounded-md text-xs font-medium text-slate-300">
+                <span className="inline-flex items-center px-2.5 py-1 bg-slate-700/60 rounded-md text-xs font-medium text-slate-300">
                   {error.serviceName}
                 </span>
 
@@ -259,8 +229,8 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
                 <span
                   className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
                     error.source === 'auto-capture'
-                      ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                      : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                      ? 'bg-indigo-500/8 text-indigo-400 border border-indigo-500/15'
+                      : 'bg-cyan-500/8 text-cyan-400 border border-cyan-500/15'
                   }`}
                 >
                   {error.source === 'auto-capture'
@@ -270,20 +240,19 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
 
                 {/* Endpoint badge */}
                 {error.endpoint && (
-                  <span className="inline-flex items-center px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-md text-xs font-mono text-indigo-400">
+                  <span className="inline-flex items-center px-2.5 py-1 bg-indigo-500/8 border border-indigo-500/15 rounded-md text-xs font-mono text-indigo-400">
                     {error.endpoint}
                   </span>
                 )}
               </div>
 
               {/* Error message */}
-              <h2 className="text-lg font-medium text-slate-100 break-words">
+              <h2 className="text-lg font-medium text-slate-100 break-words leading-relaxed">
                 {error.message}
               </h2>
 
-              {/* Status button group */}
-              <div className="flex items-center gap-1 mt-3">
-                <span className="text-xs text-slate-500 mr-2">Status:</span>
+              {/* Status segmented control */}
+              <div className="segmented-control mt-4">
                 {STATUS_OPTIONS.map((opt) => {
                   const isActive = error.status === opt.value;
                   return (
@@ -291,12 +260,13 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
                       key={opt.value}
                       onClick={() => handleStatusChange(opt.value)}
                       disabled={statusUpdating}
-                      className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
+                      className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full transition-all ${
                         isActive
-                          ? `${opt.activeBg} ${opt.activeText} border-current`
-                          : `${opt.bg} ${opt.text} border-slate-600 hover:border-slate-500`
+                          ? `${opt.activeBg} ${opt.activeText} border ${opt.activeBorder}`
+                          : 'text-slate-500 hover:text-slate-300 border border-transparent'
                       } ${statusUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
+                      <span className={`w-1.5 h-1.5 rounded-full ${isActive ? opt.dot : 'bg-slate-600'}`} />
                       {opt.label}
                     </button>
                   );
@@ -314,34 +284,34 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
           </div>
 
           {/* Occurrence timeline */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-slate-900/50 rounded-lg p-3">
-              <p className="text-xs text-slate-500 mb-1">Occurrences</p>
-              <p className="text-xl font-semibold text-slate-100 tabular-nums">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="stat-card rounded-lg p-3.5">
+              <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1.5 font-medium">Occurrences</p>
+              <p className="text-xl font-bold text-slate-100 tabular-nums">
                 {error.occurrenceCount.toLocaleString()}
               </p>
             </div>
-            <div className="bg-slate-900/50 rounded-lg p-3">
-              <p className="text-xs text-slate-500 mb-1">First seen</p>
+            <div className="stat-card rounded-lg p-3.5">
+              <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1.5 font-medium">First seen</p>
               <p
                 className="text-sm font-medium text-slate-200"
                 title={new Date(error.firstSeenAt).toISOString()}
               >
                 {formatTimestamp(error.firstSeenAt)}
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-0.5">
                 {formatRelativeTime(error.firstSeenAt)}
               </p>
             </div>
-            <div className="bg-slate-900/50 rounded-lg p-3">
-              <p className="text-xs text-slate-500 mb-1">Last seen</p>
+            <div className="stat-card rounded-lg p-3.5">
+              <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1.5 font-medium">Last seen</p>
               <p
                 className="text-sm font-medium text-slate-200"
                 title={new Date(error.lastSeenAt).toISOString()}
               >
                 {formatTimestamp(error.lastSeenAt)}
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-0.5">
                 {formatRelativeTime(error.lastSeenAt)}
               </p>
             </div>
@@ -350,11 +320,11 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
 
         {/* Stack trace */}
         {error.stackTrace && (
-          <div className="p-6 border-b border-slate-700">
-            <h3 className="text-sm font-medium text-slate-400 mb-3">
+          <div className="p-6 border-b border-slate-700/50">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
               Stack Trace
             </h3>
-            <pre className="bg-slate-900 border border-slate-700 rounded-lg p-4 overflow-x-auto text-xs text-slate-300 leading-relaxed max-h-96 overflow-y-auto">
+            <pre className="code-block rounded-lg p-4 overflow-x-auto text-xs text-slate-300 leading-relaxed max-h-96 overflow-y-auto">
               <code>{error.stackTrace}</code>
             </pre>
           </div>
@@ -362,11 +332,11 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
 
         {/* Raw log */}
         {error.rawLog && (
-          <div className="p-6 border-b border-slate-700">
-            <h3 className="text-sm font-medium text-slate-400 mb-3">
+          <div className="p-6 border-b border-slate-700/50">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
               Raw Log
             </h3>
-            <pre className="bg-slate-900 border border-slate-700 rounded-lg p-4 overflow-x-auto text-xs text-slate-300 leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap break-all">
+            <pre className="code-block rounded-lg p-4 overflow-x-auto text-xs text-slate-300 leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap break-all">
               <code>{error.rawLog}</code>
             </pre>
           </div>
@@ -374,16 +344,16 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
 
         {/* Metadata */}
         {metadata && Object.keys(metadata).length > 0 && (
-          <div className="p-6 border-b border-slate-700">
-            <h3 className="text-sm font-medium text-slate-400 mb-3">
+          <div className="p-6 border-b border-slate-700/50">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
               Metadata
             </h3>
-            <div className="bg-slate-900 border border-slate-700 rounded-lg p-4">
+            <div className="bg-slate-900/40 border border-slate-700/50 rounded-lg p-4">
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {Object.entries(metadata as Record<string, unknown>).map(
                   ([key, value]) => (
                     <div key={key}>
-                      <dt className="text-xs text-slate-500 font-medium">
+                      <dt className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">
                         {key}
                       </dt>
                       <dd className="text-sm text-slate-300 mt-0.5 break-words font-mono">
@@ -400,31 +370,31 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
         )}
 
         {/* Additional info */}
-        <div className="p-6 border-b border-slate-700">
-          <h3 className="text-sm font-medium text-slate-400 mb-3">
+        <div className="p-6">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
             Details
           </h3>
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <dt className="text-xs text-slate-500">Error ID</dt>
+              <dt className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">Error ID</dt>
               <dd className="text-sm text-slate-300 font-mono mt-0.5">
                 {error.id}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-500">Fingerprint</dt>
+              <dt className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">Fingerprint</dt>
               <dd className="text-sm text-slate-300 font-mono mt-0.5 truncate" title={error.fingerprint}>
                 {error.fingerprint}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-500">Deployment ID</dt>
+              <dt className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">Deployment ID</dt>
               <dd className="text-sm text-slate-300 font-mono mt-0.5">
                 {error.deploymentId || '--'}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-slate-500">Created</dt>
+              <dt className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">Created</dt>
               <dd className="text-sm text-slate-300 mt-0.5">
                 {formatTimestamp(error.createdAt)}
               </dd>
@@ -435,11 +405,11 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
 
       {/* Related errors */}
       {relatedErrors.length > 0 && (
-        <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+        <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl overflow-hidden">
           <div className="p-6">
-            <h3 className="text-sm font-medium text-slate-400 mb-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
               Related Errors from Other Services
-              <span className="text-xs text-slate-500 font-normal ml-2">
+              <span className="text-[11px] text-slate-600 font-normal normal-case tracking-normal ml-2">
                 (within 5-minute window)
               </span>
             </h3>
@@ -450,11 +420,11 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
                   <a
                     key={related.id}
                     href={`#/errors/${related.id}`}
-                    className="block bg-slate-900/50 border border-slate-700 rounded-lg p-3 hover:border-slate-600 transition-colors"
+                    className="card-hover block bg-slate-900/40 border border-slate-700/50 rounded-lg p-3 hover:border-slate-600/60"
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span
-                        className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${relSev.bg} ${relSev.text}`}
+                        className={`inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold uppercase ${relSev.bg} ${relSev.text}`}
                       >
                         {related.severity}
                       </span>
@@ -467,7 +437,7 @@ export function ErrorDetail({ errorId }: ErrorDetailProps) {
                         </span>
                       )}
                       <span className="text-xs text-slate-500 ml-auto tabular-nums">
-                        x{related.occurrenceCount}
+                        {related.occurrenceCount}x
                       </span>
                     </div>
                     <p className="text-sm text-slate-400 truncate">
