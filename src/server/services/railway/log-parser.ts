@@ -115,6 +115,31 @@ const INFRA_ERROR_PATTERNS = [
   /\btoo many connections\b/i,
   /\bEMFILE\b/,
   /\bENOMEM\b/,
+  // Postgres / Supabase
+  /\bFATAL:\s+too many connections\b/i,
+  /\bFATAL:\s+password authentication failed\b/i,
+  /\bFATAL:\s+database .* does not exist\b/i,
+  /\bFATAL:\s+role .* does not exist\b/i,
+  /\bconnection to server at .* failed\b/i,
+  /\bremaining connection slots are reserved\b/i,
+  /\bSSL connection has been closed unexpectedly\b/i,
+  /\bcould not translate host name\b/i,
+  /\bno pg_hba\.conf entry\b/i,
+  /\bconnection terminated unexpectedly\b/i,
+  /\bprepared statement .* already exists\b/i,
+  /\bsupabase.*5[0-9]{2}\b/i,
+  // Redis
+  /\bRedis connection .* failed\b/i,
+  /\bREADONLY You can't write against a read only\b/i,
+  /\bNOAUTH Authentication required\b/i,
+  // Generic DB/service
+  /\bconnection pool timeout\b/i,
+  /\bquery timeout\b/i,
+  /\bsocket hang up\b/i,
+  /\bfetch failed\b/i,
+  /\bservice unavailable\b/i,
+  /\bgateway timeout\b/i,
+  /\bbad gateway\b/i,
 ];
 
 const PYTHON_ERROR_PATTERNS = [
