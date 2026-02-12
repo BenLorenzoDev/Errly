@@ -37,6 +37,12 @@ const ERROR_MARKERS = [
   /\bERROR:/,
   /\bFATAL:/,
   /\bCRITICAL:/,
+  /"level"\s*:\s*"error"/i,         // JSON structured logs
+  /"level"\s*:\s*"fatal"/i,
+  /"level"\s*:\s*"critical"/i,
+  /\blevel=error\b/i,               // Key-value structured logs (logfmt)
+  /\blevel=fatal\b/i,
+  /\blevel=critical\b/i,
 ];
 
 const UNCAUGHT_PATTERNS = [
@@ -83,6 +89,15 @@ const WARNING_PATTERNS = [
   /\bDEPRECATED\b/,
   /slow query/i,
   /query took/i,
+];
+
+const WARN_MARKERS = [
+  /\[WARN\]/i,
+  /\[WARNING\]/i,
+  /\bWARN:/i,
+  /\bWARNING:/i,
+  /"level"\s*:\s*"warn(ing)?"/i,   // JSON structured logs (Winston, Bunyan, etc.)
+  /\blevel=warn(ing)?\b/i,         // Key-value structured logs (logfmt)
 ];
 
 const INFRA_ERROR_PATTERNS = [
@@ -255,8 +270,8 @@ function classifySeverity(message: string): 'error' | 'warn' | 'fatal' {
     if (pattern.test(message)) return 'warn';
   }
 
-  if (/\[WARN\]/i.test(message) || /\bWARN:/i.test(message) || /\bWARNING:/i.test(message)) {
-    return 'warn';
+  for (const pattern of WARN_MARKERS) {
+    if (pattern.test(message)) return 'warn';
   }
 
   return 'error';
@@ -421,6 +436,18 @@ export function isErrorLog(message: string): ParsedLogLine {
 
   // Check warning patterns
   for (const pattern of WARNING_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return {
+        isError: true,
+        severity: 'warn',
+        parsedMessage: trimmed,
+        endpoint: extractEndpoint(trimmed) ?? undefined,
+      };
+    }
+  }
+
+  // Check generic warn markers ([WARN], WARN:, WARNING:, structured logs)
+  for (const pattern of WARN_MARKERS) {
     if (pattern.test(trimmed)) {
       return {
         isError: true,
