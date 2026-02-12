@@ -26,7 +26,7 @@ export interface CompleteError {
 
 type AssemblerState = 'IDLE' | 'COLLECTING' | 'DONE';
 
-type TraceLanguage = 'nodejs' | 'python' | 'go' | 'java' | 'unknown';
+type TraceLanguage = 'nodejs' | 'python' | 'go' | 'java' | 'ruby' | 'rust' | 'php' | 'dotnet' | 'unknown';
 
 // --- Error Pattern Detection ---
 
@@ -74,6 +74,32 @@ const HTTP_5XX_PATTERN = /"(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+(\/[^\s"]*
 const HTTP_5XX_STRUCTURED = /method=(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+path=(\/\S+)\s+status=(5\d{2})/;
 const HTTP_ENDPOINT_FAILED = /(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+(\/\S+)\s+failed/i;
 
+const HTTP_4XX_PATTERN = /"(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+(\/[^\s"]*?)"\s*(4\d{2})/;
+const HTTP_4XX_STRUCTURED = /method=(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+path=(\/\S+)\s+status=(4\d{2})/;
+
+const WARNING_PATTERNS = [
+  /DeprecationWarning/,
+  /ExperimentalWarning/,
+  /\bDEPRECATED\b/,
+  /slow query/i,
+  /query took/i,
+];
+
+const INFRA_ERROR_PATTERNS = [
+  /\bECONNREFUSED\b/,
+  /\bECONNRESET\b/,
+  /\bETIMEDOUT\b/,
+  /\bENOTFOUND\b/,
+  /\bEHOSTUNREACH\b/,
+  /\bconnection refused\b/i,
+  /\btimed out\b/i,
+  /\bdeadline exceeded\b/i,
+  /\bpool exhausted\b/i,
+  /\btoo many connections\b/i,
+  /\bEMFILE\b/,
+  /\bENOMEM\b/,
+];
+
 const PYTHON_ERROR_PATTERNS = [
   /\braise\b/,
   /\bException:/,
@@ -85,26 +111,74 @@ const JAVA_ERROR_PATTERNS = [
   /Caused by:/,
 ];
 
+const RUBY_ERROR_PATTERNS = [
+  /\bRuntimeError\b/,
+  /\bNoMethodError\b/,
+  /\bArgumentError\b/,
+  /\bNameError\b/,
+  /\bLoadError\b/,
+  /\bActiveRecord::/,
+  /\bActionController::/,
+];
+
+const RUST_ERROR_PATTERNS = [
+  /thread '.*' panicked/,
+  /Result::unwrap\(\)/,
+  /stack backtrace:/,
+];
+
+const PHP_ERROR_PATTERNS = [
+  /\bFatal error:/,
+  /\bParse error:/,
+  /\bPHP Fatal/,
+  /\bPHP Warning/,
+  /\bPHP Notice/,
+  /\bUncaught Exception/,
+];
+
+const DOTNET_ERROR_PATTERNS = [
+  /System\.\w+Exception/,
+  /\bUnhandled exception\b/,
+  /\bNullReferenceException\b/,
+];
+
 const STACK_TRACE_START_PATTERNS = [
-  /^\s+at\s+/,           // Node.js / Java
-  /^Traceback/,          // Python
-  /^goroutine\s+\d+/,   // Go
-  /^panic:/,             // Go
+  /^\s+at\s+/,                    // Node.js / Java / .NET
+  /^Traceback/,                   // Python
+  /^goroutine\s+\d+/,            // Go
+  /^panic:/,                      // Go
+  /thread '.*' panicked/,         // Rust
+  /^stack backtrace:/,            // Rust
+  /^Fatal error:/,                // PHP
+  /^PHP Fatal/,                   // PHP
+  /^Unhandled exception/,         // .NET
 ];
 
 // --- Endpoint Extraction ---
 
 export function extractEndpoint(message: string): string | null {
-  // Pattern: "METHOD /path" STATUS
+  // Pattern: "METHOD /path" 5xx STATUS
   const match1 = message.match(HTTP_5XX_PATTERN);
   if (match1) {
     return `${match1[1]} ${match1[2]}`;
+  }
+
+  // Pattern: "METHOD /path" 4xx STATUS
+  const match1b = message.match(HTTP_4XX_PATTERN);
+  if (match1b) {
+    return `${match1b[1]} ${match1b[2]}`;
   }
 
   // Pattern: method=GET path=/foo status=500
   const match2 = message.match(HTTP_5XX_STRUCTURED);
   if (match2) {
     return `${match2[1]} ${match2[2]}`;
+  }
+
+  // Pattern: method=GET path=/foo status=4xx
+  const match2b = message.match(HTTP_4XX_STRUCTURED);
+  if (match2b) {
+    return `${match2b[1]} ${match2b[2]}`;
   }
 
   // Pattern: POST /api/... failed
@@ -151,6 +225,34 @@ function classifySeverity(message: string): 'error' | 'warn' | 'fatal' {
 
   for (const pattern of JAVA_ERROR_PATTERNS) {
     if (pattern.test(message)) return 'error';
+  }
+
+  for (const pattern of INFRA_ERROR_PATTERNS) {
+    if (pattern.test(message)) return 'error';
+  }
+
+  for (const pattern of RUBY_ERROR_PATTERNS) {
+    if (pattern.test(message)) return 'error';
+  }
+
+  for (const pattern of RUST_ERROR_PATTERNS) {
+    if (pattern.test(message)) return 'error';
+  }
+
+  for (const pattern of PHP_ERROR_PATTERNS) {
+    if (pattern.test(message)) return 'error';
+  }
+
+  for (const pattern of DOTNET_ERROR_PATTERNS) {
+    if (pattern.test(message)) return 'error';
+  }
+
+  // HTTP 4xx → warn
+  if (HTTP_4XX_PATTERN.test(message) || HTTP_4XX_STRUCTURED.test(message)) return 'warn';
+
+  // Warning patterns
+  for (const pattern of WARNING_PATTERNS) {
+    if (pattern.test(message)) return 'warn';
   }
 
   if (/\[WARN\]/i.test(message) || /\bWARN:/i.test(message) || /\bWARNING:/i.test(message)) {
@@ -211,6 +313,16 @@ export function isErrorLog(message: string): ParsedLogLine {
     };
   }
 
+  // Check HTTP 4xx
+  if (HTTP_4XX_PATTERN.test(trimmed) || HTTP_4XX_STRUCTURED.test(trimmed)) {
+    return {
+      isError: true,
+      severity: 'warn',
+      parsedMessage: trimmed,
+      endpoint: extractEndpoint(trimmed) ?? undefined,
+    };
+  }
+
   // Check exit codes
   for (const pattern of EXIT_CODE_PATTERNS) {
     if (pattern.test(trimmed)) {
@@ -247,6 +359,78 @@ export function isErrorLog(message: string): ParsedLogLine {
     }
   }
 
+  // Check infrastructure errors
+  for (const pattern of INFRA_ERROR_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return {
+        isError: true,
+        severity: 'error',
+        parsedMessage: trimmed,
+        endpoint: extractEndpoint(trimmed) ?? undefined,
+      };
+    }
+  }
+
+  // Check Ruby errors
+  for (const pattern of RUBY_ERROR_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return {
+        isError: true,
+        severity: 'error',
+        parsedMessage: trimmed,
+        endpoint: extractEndpoint(trimmed) ?? undefined,
+      };
+    }
+  }
+
+  // Check Rust errors
+  for (const pattern of RUST_ERROR_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return {
+        isError: true,
+        severity: 'error',
+        parsedMessage: trimmed,
+        endpoint: extractEndpoint(trimmed) ?? undefined,
+      };
+    }
+  }
+
+  // Check PHP errors
+  for (const pattern of PHP_ERROR_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return {
+        isError: true,
+        severity: 'error',
+        parsedMessage: trimmed,
+        endpoint: extractEndpoint(trimmed) ?? undefined,
+      };
+    }
+  }
+
+  // Check .NET errors
+  for (const pattern of DOTNET_ERROR_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return {
+        isError: true,
+        severity: 'error',
+        parsedMessage: trimmed,
+        endpoint: extractEndpoint(trimmed) ?? undefined,
+      };
+    }
+  }
+
+  // Check warning patterns
+  for (const pattern of WARNING_PATTERNS) {
+    if (pattern.test(trimmed)) {
+      return {
+        isError: true,
+        severity: 'warn',
+        parsedMessage: trimmed,
+        endpoint: extractEndpoint(trimmed) ?? undefined,
+      };
+    }
+  }
+
   // Check fatal patterns
   for (const pattern of FATAL_PATTERNS) {
     if (pattern.test(trimmed)) {
@@ -270,13 +454,18 @@ export function isErrorLog(message: string): ParsedLogLine {
 
 function detectTraceLanguage(line: string): TraceLanguage {
   if (/^\s+at\s+/.test(line)) {
-    // Could be Node.js or Java — distinguish by parens content
+    // Could be Node.js, Java, or .NET
     if (/\(.*\.java:\d+\)/.test(line) || /\(.*\.kt:\d+\)/.test(line)) return 'java';
+    if (/\bat\s+\S+\.\S+\(/.test(line) && /System\./.test(line)) return 'dotnet';
     return 'nodejs';
   }
   if (/^Traceback/.test(line) || /^\s+File "/.test(line)) return 'python';
   if (/^goroutine/.test(line) || /^panic:/.test(line)) return 'go';
   if (/Caused by:/.test(line) || /Exception in thread/.test(line)) return 'java';
+  if (/from \/.*\.rb:\d+/.test(line) || /RuntimeError|NoMethodError|ActiveRecord::/.test(line)) return 'ruby';
+  if (/thread '.*' panicked/.test(line) || /stack backtrace:/.test(line)) return 'rust';
+  if (/PHP Fatal|Fatal error:|Parse error:/.test(line)) return 'php';
+  if (/System\.\w+Exception/.test(line) || /Unhandled exception/.test(line)) return 'dotnet';
   return 'unknown';
 }
 
@@ -310,6 +499,28 @@ function isStackTraceContinuation(line: string, language: TraceLanguage): boolea
     if (/^\s+at\s+/.test(line)) return true;
     if (/Caused by:/.test(trimmed)) return true;
     if (/^\s+\.\.\.\s+\d+\s+more/.test(line)) return true;
+  }
+
+  // Ruby: "from /path/to/file.rb:123:in `method'"
+  if (language === 'ruby' || /from \//.test(trimmed)) {
+    if (/^\s+from \//.test(line)) return true;
+  }
+
+  // Rust: "at src/main.rs:42" or numbered backtrace frames
+  if (language === 'rust') {
+    if (/^\s+at src\//.test(line)) return true;
+    if (/^\s+\d+:/.test(line)) return true;
+  }
+
+  // PHP: "#0 /path/to/file.php(123):" numbered stack frames
+  if (language === 'php') {
+    if (/^\s*#\d+\s+/.test(line)) return true;
+  }
+
+  // .NET: "at Namespace.Class.Method()" style frames
+  if (language === 'dotnet') {
+    if (/^\s+at\s+\S+\.\S+/.test(line)) return true;
+    if (/^---\s+End of/.test(trimmed)) return true;
   }
 
   // Node.js Error.cause chains
@@ -471,6 +682,21 @@ export class StackTraceAssembler {
     // Java
     if (/^Exception in thread/.test(trimmed)) return true;
 
+    // Ruby
+    if (/from \/.*\.rb:\d+/.test(trimmed)) return true;
+
+    // Rust
+    if (/thread '.*' panicked/.test(trimmed)) return true;
+    if (/stack backtrace:/.test(trimmed)) return true;
+
+    // PHP
+    if (/^Fatal error:/.test(trimmed)) return true;
+    if (/^PHP Fatal/.test(trimmed)) return true;
+
+    // .NET
+    if (/^Unhandled exception/.test(trimmed)) return true;
+    if (/System\.\w+Exception/.test(trimmed)) return true;
+
     return false;
   }
 
@@ -479,6 +705,10 @@ export class StackTraceAssembler {
     if (/Traceback/.test(message)) return 'python';
     if (/panic:/.test(message)) return 'go';
     if (/Exception in thread/.test(message)) return 'java';
+    if (/RuntimeError|NoMethodError|ActiveRecord::/.test(message)) return 'ruby';
+    if (/thread '.*' panicked|Result::unwrap\(\)/.test(message)) return 'rust';
+    if (/PHP Fatal|Fatal error:|Parse error:/.test(message)) return 'php';
+    if (/System\.\w+Exception|Unhandled exception/.test(message)) return 'dotnet';
     return 'unknown';
   }
 

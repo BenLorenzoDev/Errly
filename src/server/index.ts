@@ -30,6 +30,7 @@ import settingsPlugin, {
   setRunRetentionCallback,
 } from './plugins/settings.js';
 import healthPlugin from './plugins/health.js';
+import sdkPlugin from './plugins/sdk.js';
 import staticPlugin from './plugins/static.js';
 
 // Service imports
@@ -187,6 +188,15 @@ async function main(): Promise<void> {
   // Settings plugin
   await app.register(settingsPlugin);
 
+  // CORS for SDK browser requests to POST /api/errors
+  app.addHook('onRequest', async (request, reply) => {
+    if (request.url === '/api/errors' && (request.method === 'POST' || request.method === 'OPTIONS')) {
+      reply.header('Access-Control-Allow-Origin', '*');
+      reply.header('Access-Control-Allow-Headers', 'Content-Type, X-Errly-Token');
+      reply.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    }
+  });
+
   // Wire up log watcher restart callback for settings
   setRestartLogWatcherCallback(async (newToken: string) => {
     // Verify project ID is available — if not, auto-detect won't work (F11 fix)
@@ -216,6 +226,9 @@ async function main(): Promise<void> {
 
   // Wire up retention trigger for settings
   setRunRetentionCallback(runRetentionCleanup);
+
+  // SDK plugin (public, serves /sdk/errly.js)
+  await app.register(sdkPlugin);
 
   // Static file serving (LAST — catch-all for SPA fallback)
   await app.register(staticPlugin);

@@ -131,6 +131,17 @@ export default async function errorsPlugin(fastify: FastifyInstance): Promise<vo
     return reply.status(200).send(updated);
   });
 
+  // OPTIONS /api/errors — CORS preflight for browser SDK
+  fastify.options('/api/errors', async (_request, reply) => {
+    return reply
+      .status(204)
+      .header('Access-Control-Allow-Origin', '*')
+      .header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+      .header('Access-Control-Allow-Headers', 'Content-Type, X-Errly-Token')
+      .header('Access-Control-Max-Age', '86400')
+      .send();
+  });
+
   // POST /api/errors — direct integration endpoint (token auth)
   fastify.post('/api/errors', {
     config: {
