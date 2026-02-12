@@ -10,6 +10,7 @@ import { db } from '../db/index.js';
 import { settings } from '../db/schema.js';
 import { safeCompare } from '../utils/crypto.js';
 import { logger } from '../utils/logger.js';
+import { requireAuth } from './auth.js';
 import { processError, errorToSummary } from '../services/error-grouper.js';
 import * as errorStore from '../services/error-store.js';
 import type {
@@ -37,7 +38,7 @@ export default async function errorsPlugin(fastify: FastifyInstance): Promise<vo
 
   // GET /api/errors — list errors with filters
   fastify.get('/api/errors', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (request, reply) => {
     const query = request.query as Record<string, string | undefined>;
 
@@ -66,7 +67,7 @@ export default async function errorsPlugin(fastify: FastifyInstance): Promise<vo
 
   // GET /api/errors/:id — get single error
   fastify.get('/api/errors/:id', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (request, reply) => {
     const { id } = request.params as { id: string };
 
@@ -80,7 +81,7 @@ export default async function errorsPlugin(fastify: FastifyInstance): Promise<vo
 
   // GET /api/errors/:id/related — get related cross-service errors
   fastify.get('/api/errors/:id/related', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const query = request.query as Record<string, string | undefined>;
@@ -178,7 +179,7 @@ export default async function errorsPlugin(fastify: FastifyInstance): Promise<vo
 
   // DELETE /api/errors — bulk delete
   fastify.delete('/api/errors', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (request, reply) => {
     const body = request.body as DeleteErrorsRequest | undefined;
 
@@ -244,7 +245,7 @@ export default async function errorsPlugin(fastify: FastifyInstance): Promise<vo
 
   // GET /api/services — list discovered services
   fastify.get('/api/services', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (_request, reply) => {
     const services = errorStore.getServices();
     return reply.status(200).send(services);
@@ -252,7 +253,7 @@ export default async function errorsPlugin(fastify: FastifyInstance): Promise<vo
 
   // GET /api/stats — dashboard stats
   fastify.get('/api/stats', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (_request, reply) => {
     const stats = errorStore.getStats();
     return reply.status(200).send(stats);

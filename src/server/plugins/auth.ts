@@ -138,10 +138,43 @@ function checkCsrf(request: FastifyRequest): boolean {
   return true;
 }
 
-// --- Plugin ---
+// --- Standalone requireAuth preHandler ---
+// Exported so sibling plugins can import it directly (avoids Fastify encapsulation)
 
-// Store reference to SSE closeConnectionsBySession for use in auth routes
 let sseCloseBySession: ((hash: string) => void) | undefined;
+
+export async function requireAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+  const token = (request.cookies as Record<string, string | undefined>)?.errly_session;
+
+  if (!token) {
+    reply.status(401).send({ error: 'Authentication required' });
+    return;
+  }
+
+  const hash = sha256Hex(token);
+  const session = db
+    .select()
+    .from(sessions)
+    .where(eq(sessions.id, hash))
+    .get();
+
+  if (!session) {
+    reply.status(401).send({ error: 'Invalid session' });
+    return;
+  }
+
+  if (session.expiresAt < Date.now()) {
+    db.delete(sessions).where(eq(sessions.id, hash)).run();
+    if (sseCloseBySession) sseCloseBySession(hash);
+    reply.status(401).send({ error: 'Session expired' });
+    return;
+  }
+
+  // Store session hash on request for SSE tracking
+  (request as any).sessionHash = hash;
+}
+
+// --- Plugin ---
 
 export function setAuthSseCloseHandler(fn: (hash: string) => void): void {
   sseCloseBySession = fn;
@@ -160,34 +193,8 @@ export default async function authPlugin(fastify: FastifyInstance): Promise<void
     clearInterval(sessionCleanupTimer);
   });
 
-  // preHandler for authenticated routes
-  fastify.decorate('requireAuth', async (request: FastifyRequest, reply: FastifyReply) => {
-    const token = (request.cookies as Record<string, string | undefined>)?.errly_session;
-
-    if (!token) {
-      return reply.status(401).send({ error: 'Authentication required' });
-    }
-
-    const hash = sha256Hex(token);
-    const session = db
-      .select()
-      .from(sessions)
-      .where(eq(sessions.id, hash))
-      .get();
-
-    if (!session) {
-      return reply.status(401).send({ error: 'Invalid session' });
-    }
-
-    if (session.expiresAt < Date.now()) {
-      db.delete(sessions).where(eq(sessions.id, hash)).run();
-      if (sseCloseBySession) sseCloseBySession(hash);
-      return reply.status(401).send({ error: 'Session expired' });
-    }
-
-    // Store session hash on request for SSE tracking
-    (request as any).sessionHash = hash;
-  });
+  // Register requireAuth on the instance for backward compat (not relied upon)
+  fastify.decorate('requireAuth', requireAuth);
 
   // --- CSRF Hook ---
 
@@ -267,7 +274,7 @@ export default async function authPlugin(fastify: FastifyInstance): Promise<void
 
   // POST /api/auth/logout
   fastify.post('/api/auth/logout', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (request, reply) => {
     const token = (request.cookies as Record<string, string | undefined>)?.errly_session;
 
@@ -293,14 +300,14 @@ export default async function authPlugin(fastify: FastifyInstance): Promise<void
 
   // GET /api/auth/check
   fastify.get('/api/auth/check', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (_request, reply) => {
     return reply.status(200).send({ authenticated: true });
   });
 
   // DELETE /api/auth/sessions — invalidate ALL sessions
   fastify.delete('/api/auth/sessions', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (request, reply) => {
     // Use raw SQL with RETURNING
     const deleted = sqliteDb.prepare('DELETE FROM sessions RETURNING id').all() as Array<{ id: string }>;

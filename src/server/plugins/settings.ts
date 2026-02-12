@@ -12,6 +12,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { settings } from '../db/schema.js';
 import { logger } from '../utils/logger.js';
+import { requireAuth } from './auth.js';
 import { config } from '../config.js';
 import type { Settings } from '../../shared/types.js';
 
@@ -166,7 +167,7 @@ export default async function settingsPlugin(fastify: FastifyInstance): Promise<
 
   // GET /api/settings — read all settings
   fastify.get('/api/settings', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (_request, reply) => {
     const settingsResponse = buildSettingsResponse();
     return reply.status(200).send(settingsResponse);
@@ -174,7 +175,7 @@ export default async function settingsPlugin(fastify: FastifyInstance): Promise<
 
   // PUT /api/settings — update settings
   fastify.put('/api/settings', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (request, reply) => {
     const body = request.body as Partial<{
       retentionDays: number;
@@ -265,7 +266,7 @@ export default async function settingsPlugin(fastify: FastifyInstance): Promise<
 
   // POST /api/settings/webhook-test — send a test webhook
   fastify.post('/api/settings/webhook-test', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (_request, reply) => {
     const webhookUrl = JSON.parse(getSetting('webhook_url') ?? 'null') as string | null;
 

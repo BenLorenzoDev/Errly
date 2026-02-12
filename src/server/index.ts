@@ -165,11 +165,11 @@ async function main(): Promise<void> {
   // Cookie parsing
   await app.register(cookie);
 
-  // Health plugin (before auth — /health is public)
-  await app.register(healthPlugin);
-
-  // Auth plugin
+  // Auth plugin (must be before health — /api/diagnostics needs requireAuth decorator)
   await app.register(authPlugin);
+
+  // Health plugin (/health is public, /api/diagnostics uses requireAuth)
+  await app.register(healthPlugin);
 
   // Wire up SSE close handler for auth
   setAuthSseCloseHandler(closeConnectionsBySession);

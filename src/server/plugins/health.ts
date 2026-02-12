@@ -8,6 +8,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { config } from '../config.js';
 import { logger } from '../utils/logger.js';
+import { requireAuth } from './auth.js';
 import { getLogWatcher } from '../services/railway/log-watcher.js';
 import { circuitBreaker, getRateLimitInfo } from '../services/railway/client.js';
 import { getClientCount } from './sse.js';
@@ -56,7 +57,7 @@ export default async function healthPlugin(fastify: FastifyInstance): Promise<vo
 
   // GET /api/diagnostics — auth-required detailed diagnostics
   fastify.get('/api/diagnostics', {
-    preHandler: [(fastify as any).requireAuth],
+    preHandler: [requireAuth],
   }, async (_request, reply) => {
     const logWatcher = getLogWatcher();
     const rateLimitInfo = getRateLimitInfo();
