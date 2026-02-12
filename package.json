@@ -1,0 +1,53 @@
+{
+  "name": "errly",
+  "version": "1.0.0",
+  "description": "Self-hosted error observability for Railway projects",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail \"tsx watch src/server/index.ts\" \"vite dev --config vite.config.ts\"",
+    "build": "drizzle-kit generate && vite build && tsc",
+    "start": "node dist/server/index.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "test": "vitest"
+  },
+  "keywords": [
+    "railway",
+    "error-tracking",
+    "observability"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.2.0",
+    "@fastify/rate-limit": "^10.3.0",
+    "@fastify/static": "^9.0.0",
+    "better-sqlite3": "^12.6.2",
+    "drizzle-orm": "^0.38.3",
+    "fastify": "^5.7.4",
+    "graphql": "^16.12.0",
+    "graphql-ws": "^6.0.7",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "@testing-library/react": "^16.3.2",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.2.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-react": "^5.1.4",
+    "concurrently": "^9.2.1",
+    "drizzle-kit": "^0.30.1",
+    "jsdom": "^28.0.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwindcss": "^4.1.18",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
+  }
+}

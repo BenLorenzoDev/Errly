@@ -1,0 +1,129 @@
+/* ============================================================================
+   Errly — Global Styles
+   Tailwind CSS v4 — CSS-first configuration
+   Dark dashboard theme: slate/zinc base, severity-coded accents
+   ============================================================================ */
+
+@import "tailwindcss";
+
+@theme {
+  /* --- Base palette (dark dashboard) --- */
+  --color-bg-primary: #0f172a;       /* slate-900 */
+  --color-bg-secondary: #1e293b;     /* slate-800 */
+  --color-bg-tertiary: #334155;      /* slate-700 */
+  --color-bg-hover: #2d3a4f;         /* between slate-800 and slate-700 */
+  --color-border: #475569;           /* slate-600 */
+  --color-border-subtle: #334155;    /* slate-700 */
+  --color-text-primary: #f1f5f9;     /* slate-100 */
+  --color-text-secondary: #94a3b8;   /* slate-400 */
+  --color-text-muted: #64748b;       /* slate-500 */
+
+  /* --- Severity colors --- */
+  --color-severity-error: #ef4444;       /* red-500 */
+  --color-severity-error-bg: #7f1d1d;    /* red-900 */
+  --color-severity-error-light: #fca5a5; /* red-300 */
+  --color-severity-warn: #f59e0b;        /* amber-500 */
+  --color-severity-warn-bg: #78350f;     /* amber-900 */
+  --color-severity-warn-light: #fcd34d;  /* amber-300 */
+  --color-severity-fatal: #a855f7;       /* purple-500 */
+  --color-severity-fatal-bg: #581c87;    /* purple-900 */
+  --color-severity-fatal-light: #d8b4fe; /* purple-300 */
+  --color-severity-success: #22c55e;     /* green-500 */
+  --color-severity-success-bg: #14532d;  /* green-900 */
+  --color-severity-success-light: #86efac;/* green-300 */
+
+  /* --- Accent / interactive --- */
+  --color-accent: #6366f1;          /* indigo-500 */
+  --color-accent-hover: #818cf8;    /* indigo-400 */
+  --color-accent-bg: #312e81;       /* indigo-900 */
+
+  /* --- Status indicators --- */
+  --color-connected: #22c55e;       /* green-500 */
+  --color-disconnected: #ef4444;    /* red-500 */
+  --color-reconnecting: #f59e0b;    /* amber-500 */
+}
+
+/* --- Base reset & dark defaults --- */
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-slate-900 text-slate-100 antialiased;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* --- Scrollbar styling for dark theme --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* --- Code blocks --- */
+pre, code {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+    'Liberation Mono', monospace;
+}
+
+/* --- New error highlight animation --- */
+@keyframes error-flash {
+  0% {
+    background-color: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.5);
+  }
+  100% {
+    background-color: transparent;
+    border-color: transparent;
+  }
+}
+
+.error-new {
+  animation: error-flash 2s ease-out;
+}
+
+/* --- Skeleton loading animation --- */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #1e293b 25%,
+    #334155 50%,
+    #1e293b 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+/* --- Pulse for status indicators --- */
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}

@@ -1,0 +1,27 @@
+node_modules/
+dist/
+data/
+.env
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# BMad framework (not part of Errly source)
+_bmad/
+.agent/
+
+# BMad output (spec artifacts)
+_bmad-output/
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+nul
