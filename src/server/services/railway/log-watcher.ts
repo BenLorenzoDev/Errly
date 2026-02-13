@@ -53,6 +53,10 @@ export class LogWatcher {
   private running = false;
   private broadcastFn: BroadcastFn | null = null;
 
+  // Reconnection
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private reconnectDelayMs: number = 5_000; // 5s debounce
+
   // Adaptive discovery interval
   private baseDiscoveryIntervalMs: number = 60_000;
   private currentDiscoveryIntervalMs: number = 60_000;
@@ -135,6 +139,12 @@ export class LogWatcher {
     if (this.healthTimer) {
       clearInterval(this.healthTimer);
       this.healthTimer = null;
+    }
+
+    // Cancel pending reconnect
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
     }
 
     // Close all subscriptions
@@ -294,6 +304,12 @@ export class LogWatcher {
 
         this.handleLogBatch(sub.serviceName, sub.deploymentId, logBatch);
       }
+
+      // Generator ended cleanly — mark closed and schedule reconnect
+      if (this.running) {
+        sub.status = 'closed';
+        this.scheduleReconnect();
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       if (this.running) {
@@ -303,6 +319,9 @@ export class LogWatcher {
           error: message,
         });
         sub.status = 'closed';
+
+        // Schedule immediate reconnect instead of waiting for discovery
+        this.scheduleReconnect();
       }
     }
   }
@@ -475,6 +494,51 @@ export class LogWatcher {
         serviceName: sub.serviceName,
       });
     }
+  }
+
+  // --- Reconnection ---
+
+  /** Debounced reconnect: when multiple subscriptions die at once (common with
+   *  a single WS disconnect), coalesce into a single reconnect cycle. */
+  private scheduleReconnect(): void {
+    if (this.reconnectTimer || !this.running) return;
+
+    this.reconnectTimer = setTimeout(async () => {
+      this.reconnectTimer = null;
+      if (!this.running) return;
+
+      // Count how many subscriptions are still alive
+      let aliveCount = 0;
+      let closedCount = 0;
+      for (const sub of this.subscriptions.values()) {
+        if (sub.status === 'active') aliveCount++;
+        if (sub.status === 'closed') closedCount++;
+      }
+
+      if (closedCount === 0) return; // All recovered on their own
+
+      logger.info('Reconnecting dead subscriptions', {
+        alive: aliveCount,
+        closed: closedCount,
+      });
+
+      // If ALL subscriptions are dead, the WebSocket client itself is likely dead.
+      // Rebuild it before reopening subscriptions.
+      if (aliveCount === 0 && closedCount > 0) {
+        logger.info('All subscriptions dead — rebuilding WebSocket client');
+        this.rebuildWsClient();
+      }
+
+      // Trigger a full discovery to reopen closed subscriptions
+      await this.refreshDeployments();
+    }, this.reconnectDelayMs);
+  }
+
+  /** Dispose the old WS client and create a fresh one. */
+  private rebuildWsClient(): void {
+    disposeWsClient();
+    this.wsClient = createWsClient(this.token);
+    logger.info('WebSocket client rebuilt');
   }
 
   // --- Adaptive Discovery Interval ---

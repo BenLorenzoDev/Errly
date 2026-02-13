@@ -294,13 +294,14 @@ export function createWsClient(token: string): Client {
     connectionParams: () => ({
       token,
     }),
-    retryAttempts: 10,
+    retryAttempts: Infinity,
     retryWait: async (retries: number) => {
-      // Exponential backoff: 1s, 2s, 4s, 8s, ..., capped at 60s
-      const delay = Math.min(1000 * Math.pow(2, retries), 60_000);
+      // Exponential backoff: 1s, 2s, 4s, 8s, ..., capped at 30s
+      const delay = Math.min(1000 * Math.pow(2, retries), 30_000);
       logger.debug('WebSocket retry wait', { retries, delayMs: delay });
       await new Promise((resolve) => setTimeout(resolve, delay));
     },
+    keepAlive: 10_000, // Send ping every 10s to prevent Railway timeout
     on: {
       connected: () => {
         logger.info('Railway WebSocket connected');
